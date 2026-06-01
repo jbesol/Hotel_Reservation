@@ -1,0 +1,9 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "java -jar target/hotel-reservation-0.0.1-SNAPSHOT.jar"
+healthcheckPath = "/api/v1/habitaciones"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
