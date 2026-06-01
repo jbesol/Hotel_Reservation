@@ -3,6 +3,8 @@
 API REST para gestión de reservas de hotel construida con Java y Spring Boot.  
 Cubre el ciclo completo: habitaciones, huéspedes y reservas con máquina de estados y prevención de double booking.
 
+**Demo en vivo:** `https://hotelreservation-production-6038.up.railway.app/api/v1`
+
 ---
 
 ## Stack tecnológico

@@ -9,7 +9,7 @@
 
 // ── Configuration ───────────────────────────────────────────────────
 // Replace with your actual Spring Boot backend URL
-const BASE_URL = 'http://localhost:8080/api/v1'
+const BASE_URL = 'https://hotelreservation-production-6038.up.railway.app/api/v1'
 
 // Toggle to false to use the real REST API
 const USE_MOCK = true
