@@ -1,129 +1,193 @@
 # Hotel Reservation System
 
-API REST para gestión de reservas de hotel construida con Java y Spring Boot.
+API REST para gestión de reservas de hotel construida con Java y Spring Boot.  
+Cubre el ciclo completo: habitaciones, huéspedes y reservas con máquina de estados y prevención de double booking.
 
-## Tecnologías
+---
 
-- **Java 23** — lenguaje principal
-- **Spring Boot 3.5** — framework web
-- **Spring Data JPA** — ORM para acceso a datos
-- **Hibernate** — implementación JPA
-- **PostgreSQL** — base de datos
-- **Maven** — gestión de dependencias
-- **Docker** — contenedor para la base de datos
-- **Postman** — pruebas de API
+## Stack tecnológico
+
+| Capa | Tecnología |
+|------|-----------|
+| Lenguaje | Java 23 |
+| Framework | Spring Boot 3.5 |
+| Persistencia | Spring Data JPA + Hibernate |
+| Base de datos | PostgreSQL 16 |
+| Contenedor BD | Docker Compose |
+| Build | Maven |
+| Pruebas API | Postman |
+
+---
 
 ## Arquitectura
-controller/   →  recibe requests HTTP y delega al servicio
-service/      →  lógica de negocio y reglas del dominio
-repository/   →  acceso a datos con Spring Data JPA
-entity/       →  modelos de base de datos
-dto/          →  objetos de transferencia de datos (entrada/salida)
-enums/        →  valores fijos del sistema
-exception/    →  manejo centralizado de errores
+
+```
+com.miportafolio.hotel_reservation
+├── controller/     recibe requests HTTP, delega al servicio, retorna respuesta
+├── service/        lógica de negocio, validaciones, reglas del dominio
+├── repository/     acceso a datos con Spring Data JPA (queries JPQL custom)
+├── entity/         entidades JPA mapeadas a tablas de PostgreSQL
+├── dto/            Records de entrada (Request) y salida (Response) por dominio
+├── enums/          TipoHabitacion · EstadoReserva
+└── exception/      excepciones de dominio + GlobalExceptionHandler
+```
+
+El flujo siempre es **Controller → Service → Repository**. Los controllers nunca tocan entities directamente; los services nunca exponen entities hacia afuera — solo DTOs.
+
+---
 
 ## Modelo de dominio
+
+```
 Huesped ──< Reserva >── Habitacion
+```
 
-Un huésped puede tener muchas reservas.
-Una habitación puede tener muchas reservas (en fechas distintas).
+- Un huésped puede tener muchas reservas.
+- Una habitación puede tener muchas reservas (en fechas distintas, sin solapamiento).
+- La reserva es la entidad central que une ambos lados.
 
-## Estados de una reserva
-PENDIENTE → CONFIRMADA → CHECKED_IN → CHECKED_OUT
-↓              ↓
-CANCELADA      CANCELADA
+---
 
-Transiciones inválidas son rechazadas automáticamente con un error 400.
+## Máquina de estados — Reserva
 
-## Decisiones técnicas
+```
+PENDIENTE ──→ CONFIRMADA ──→ CHECKED_IN ──→ CHECKED_OUT
+    │               │
+    └──→ CANCELADA  └──→ CANCELADA
+```
 
-**Prevención de double booking**
-Antes de confirmar una reserva se verifica que no exista otra reserva
-en estado CONFIRMADA o CHECKED_IN para la misma habitación y fechas.
-La query usa lógica de solapamiento de intervalos:
-`checkIn < otraCheckOut AND checkOut > otraCheckIn`
+Las transiciones inválidas (ej. `CHECKED_OUT → PENDIENTE`) son rechazadas con `400 Bad Request`. El servicio valida el estado actual antes de permitir cualquier cambio.
 
-**@Transactional en operaciones críticas**
-Las operaciones que modifican múltiples entidades (crear reserva,
-cambiar estado) usan @Transactional — si algo falla, todo se revierte.
+---
 
-**Máquina de estados**
-El sistema valida cada transición de estado. No puedes pasar de
-CHECKED_OUT a PENDIENTE ni de CANCELADA a CONFIRMADA.
+## Decisiones de diseño
 
-**DTOs con Records anidados**
-Cada dominio tiene un solo archivo DTO con Request y Response como
-Records anidados. Más limpio que tener archivos separados por cada tipo.
+**Prevención de double booking**  
+Antes de crear una reserva se ejecuta una query JPQL personalizada que detecta solapamiento de intervalos:
+```sql
+checkIn < otraCheckOut AND checkOut > otraCheckIn
+-- Solo considera reservas CONFIRMADA o CHECKED_IN (no PENDIENTE ni CANCELADA)
+```
 
-**Cálculo automático del total**
-El precio total se calcula automáticamente al crear la reserva:
-`noches = ChronoUnit.DAYS.between(checkIn, checkOut)`
-`total = noches * precioPorNoche`
+**`@Transactional` en operaciones críticas**  
+Crear una reserva y cambiar su estado están marcados con `@Transactional`. Si cualquier paso falla, la transacción completa se revierte — nunca queda la base de datos en estado inconsistente.
+
+**DTOs como Records anidados**  
+Cada dominio tiene un único archivo `XxxDto.java` con `Request` y `Response` como Records internos. Más limpio que tener cuatro archivos separados por entidad.
+
+**Manejo centralizado de errores**  
+`GlobalExceptionHandler` (@RestControllerAdvice) cubre tres casos con respuestas JSON consistentes:
+
+| Excepción | HTTP | Cuándo |
+|-----------|------|--------|
+| `ResourceNotFoundException` | 404 | Entidad no encontrada por ID |
+| `BusinessException` | 400 | Regla de negocio violada |
+| `MethodArgumentNotValidException` | 422 | Campos con `@Valid` inválidos |
+
+**Cálculo automático del total**  
+El servicio calcula el total al crear la reserva:
+```java
+long noches = ChronoUnit.DAYS.between(checkIn, checkOut);
+BigDecimal total = habitacion.getPrecioPorNoche().multiply(BigDecimal.valueOf(noches));
+```
+
+---
 
 ## Endpoints
 
+Base URL: `http://localhost:8081/api/v1`
+
 ### Habitaciones
+
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/api/v1/habitaciones` | Crear habitación |
-| GET | `/api/v1/habitaciones` | Listar todas |
-| GET | `/api/v1/habitaciones/{id}` | Obtener por ID |
-| GET | `/api/v1/habitaciones/disponibles` | Listar disponibles |
-| GET | `/api/v1/habitaciones/tipo/{tipo}` | Filtrar por tipo |
-| GET | `/api/v1/habitaciones/disponibles/fechas?checkIn=&checkOut=` | Disponibles en fechas |
-| PUT | `/api/v1/habitaciones/{id}` | Actualizar |
-| DELETE | `/api/v1/habitaciones/{id}` | Eliminar |
+| `POST` | `/habitaciones` | Crear habitación |
+| `GET` | `/habitaciones` | Listar todas |
+| `GET` | `/habitaciones/{id}` | Obtener por ID |
+| `GET` | `/habitaciones/disponibles` | Solo las disponibles |
+| `GET` | `/habitaciones/tipo/{tipo}` | Filtrar por tipo |
+| `GET` | `/habitaciones/disponibles/fechas?checkIn=&checkOut=` | Disponibles en rango de fechas |
+| `PUT` | `/habitaciones/{id}` | Actualizar |
+| `DELETE` | `/habitaciones/{id}` | Eliminar |
+
+Tipos válidos: `SIMPLE` · `DOBLE` · `SUITE` · `PRESIDENCIAL`
 
 ### Huéspedes
+
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/api/v1/huespedes` | Crear huésped |
-| GET | `/api/v1/huespedes` | Listar todos |
-| GET | `/api/v1/huespedes/{id}` | Obtener por ID |
-| PUT | `/api/v1/huespedes/{id}` | Actualizar |
-| DELETE | `/api/v1/huespedes/{id}` | Eliminar |
+| `POST` | `/huespedes` | Crear huésped |
+| `GET` | `/huespedes` | Listar todos |
+| `GET` | `/huespedes/{id}` | Obtener por ID |
+| `PUT` | `/huespedes/{id}` | Actualizar |
+| `DELETE` | `/huespedes/{id}` | Eliminar |
 
 ### Reservas
+
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/api/v1/reservas` | Crear reserva |
-| GET | `/api/v1/reservas` | Listar todas |
-| GET | `/api/v1/reservas/{id}` | Obtener por ID |
-| GET | `/api/v1/reservas/huesped/{id}` | Reservas por huésped |
-| PATCH | `/api/v1/reservas/{id}/estado?nuevoEstado=` | Cambiar estado |
+| `POST` | `/reservas` | Crear reserva |
+| `GET` | `/reservas` | Listar todas |
+| `GET` | `/reservas/{id}` | Obtener por ID |
+| `GET` | `/reservas/huesped/{id}` | Reservas de un huésped |
+| `PATCH` | `/reservas/{id}/estado?nuevoEstado=` | Cambiar estado |
 
-## Correr el proyecto
+---
 
-**Requisitos:** Docker Desktop, Java 23, Maven
+## Colección Postman
+
+El archivo `hotel.postman_collection.json` en la raíz del repositorio contiene todos los endpoints listos para importar.
+
+**Importar:** Postman → Import → seleccionar el archivo.  
+La variable `{{base_url}}` apunta a `http://localhost:8081/api/v1` por defecto.
+
+Incluye requests de prueba para los casos de negocio más importantes:
+- Double booking — debe devolver `400`
+- Transición de estado inválida — debe devolver `400`
+
+---
+
+## Ejecutar el proyecto
+
+**Requisitos:** Docker Desktop · Java 23 · Maven
 
 ```bash
 # 1. Clonar el repositorio
 git clone https://github.com/tu-usuario/hotel-reservation
 cd hotel-reservation
 
-# 2. Levantar PostgreSQL
+# 2. Levantar PostgreSQL en Docker
 docker compose up -d
 
-# 3. Correr la app
+# 3. Iniciar la aplicación
 ./mvnw spring-boot:run
 ```
 
-API disponible en `http://localhost:8081`
+La API queda disponible en `http://localhost:8081/api/v1`
 
-## Variables de configuración
-
-En `src/main/resources/application.properties`:
+### Configuración (`application.properties`)
 
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5435/hotel_db
 spring.datasource.username=hotel_user
 spring.datasource.password=hotel_password
 server.port=8081
+spring.jpa.hibernate.ddl-auto=update
 ```
 
-## Tipos de habitación
+PostgreSQL corre en el puerto `5435` del host (mapeado a `5432` dentro del contenedor) para no colisionar con instalaciones locales.
 
-- `SIMPLE` — habitación individual
-- `DOBLE` — habitación doble
-- `SUITE` — suite estándar
-- `PRESIDENCIAL` — suite presidencial
+---
+
+## Frontend (complementario)
+
+Interfaz visual construida con React 18 + Vite + Tailwind CSS. Su propósito es demostrar la API, no es el foco del proyecto.
+
+```bash
+cd frontend
+npm install
+npm run dev   # http://localhost:3000
+```
+
+Por defecto usa datos mock (`USE_MOCK = true` en `src/api/api.js`).  
+Para conectar con el backend real: cambiar a `USE_MOCK = false` y asegurarse de que Spring Boot esté corriendo.

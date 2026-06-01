@@ -1,0 +1,377 @@
+{
+  "info": {
+    "_postman_id": "6b0a829d-77bc-4ba8-a6c9-56891decbc78",
+    "name": "Hotel Reservation API",
+    "description": "API REST para gestión de reservas del Hotel Grand Meridian.\n\nBase URL: http://localhost:8081/api/v1\n\nFlujo básico:\n1. Crear habitación (POST /habitaciones)\n2. Crear huésped (POST /huespedes)\n3. Crear reserva con los IDs obtenidos (POST /reservas)\n4. Cambiar estado de la reserva (PATCH /reservas/{id}/estado)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8081/api/v1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Habitaciones",
+      "item": [
+        {
+          "name": "Crear habitación",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numHabitacion\": \"101\",\n  \"tipo\": \"SIMPLE\",\n  \"precioPorNoche\": 89.00,\n  \"capacidad\": 1,\n  \"descripcion\": \"Habitación individual con vista al jardín, TV 4K y ducha de lluvia.\",\n  \"disponible\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/habitaciones",
+              "host": ["{{base_url}}"],
+              "path": ["habitaciones"]
+            },
+            "description": "Crea una nueva habitación. Tipos válidos: SIMPLE, DOBLE, SUITE, PRESIDENCIAL."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/habitaciones",
+              "host": ["{{base_url}}"],
+              "path": ["habitaciones"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/habitaciones/1",
+              "host": ["{{base_url}}"],
+              "path": ["habitaciones", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar disponibles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/habitaciones/disponibles",
+              "host": ["{{base_url}}"],
+              "path": ["habitaciones", "disponibles"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar por tipo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/habitaciones/tipo/SUITE",
+              "host": ["{{base_url}}"],
+              "path": ["habitaciones", "tipo", "SUITE"]
+            },
+            "description": "Tipos válidos: SIMPLE, DOBLE, SUITE, PRESIDENCIAL."
+          },
+          "response": []
+        },
+        {
+          "name": "Disponibles por fechas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/habitaciones/disponibles/fechas?checkIn=2026-07-01&checkOut=2026-07-05",
+              "host": ["{{base_url}}"],
+              "path": ["habitaciones", "disponibles", "fechas"],
+              "query": [
+                { "key": "checkIn",  "value": "2026-07-01" },
+                { "key": "checkOut", "value": "2026-07-05" }
+              ]
+            },
+            "description": "Devuelve habitaciones sin reservas activas (CONFIRMADA o CHECKED_IN) en el rango de fechas indicado."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar habitación",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numHabitacion\": \"101\",\n  \"tipo\": \"SIMPLE\",\n  \"precioPorNoche\": 99.00,\n  \"capacidad\": 1,\n  \"descripcion\": \"Habitación individual renovada con vista al jardín.\",\n  \"disponible\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/habitaciones/1",
+              "host": ["{{base_url}}"],
+              "path": ["habitaciones", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar habitación",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/habitaciones/1",
+              "host": ["{{base_url}}"],
+              "path": ["habitaciones", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Huéspedes",
+      "item": [
+        {
+          "name": "Crear huésped",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Pérez\",\n  \"email\": \"juan.perez@email.com\",\n  \"telefono\": \"3001234567\",\n  \"documento\": \"1234567890\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/huespedes",
+              "host": ["{{base_url}}"],
+              "path": ["huespedes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/huespedes",
+              "host": ["{{base_url}}"],
+              "path": ["huespedes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/huespedes/1",
+              "host": ["{{base_url}}"],
+              "path": ["huespedes", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar huésped",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Pérez\",\n  \"email\": \"juan.perez.nuevo@email.com\",\n  \"telefono\": \"3009876543\",\n  \"documento\": \"1234567890\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/huespedes/1",
+              "host": ["{{base_url}}"],
+              "path": ["huespedes", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar huésped",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/huespedes/1",
+              "host": ["{{base_url}}"],
+              "path": ["huespedes", "1"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reservas",
+      "item": [
+        {
+          "name": "Crear reserva",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"huespedId\": 1,\n  \"habitacionId\": 1,\n  \"checkIn\": \"2026-07-01\",\n  \"checkOut\": \"2026-07-05\",\n  \"observaciones\": \"Solicita habitación en piso alto\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/reservas",
+              "host": ["{{base_url}}"],
+              "path": ["reservas"]
+            },
+            "description": "Valida disponibilidad de fechas (previene double booking) y calcula el total automáticamente.\n\nEstado inicial: PENDIENTE."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear reserva — double booking (prueba)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"huespedId\": 2,\n  \"habitacionId\": 1,\n  \"checkIn\": \"2026-07-03\",\n  \"checkOut\": \"2026-07-07\",\n  \"observaciones\": \"Este request debe fallar con 400\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/reservas",
+              "host": ["{{base_url}}"],
+              "path": ["reservas"]
+            },
+            "description": "Intenta reservar la misma habitación en fechas solapadas con la reserva anterior. Debe devolver 400 Bad Request con el mensaje de conflicto."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas",
+              "host": ["{{base_url}}"],
+              "path": ["reservas"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas/1",
+              "host": ["{{base_url}}"],
+              "path": ["reservas", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reservas por huésped",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas/huesped/1",
+              "host": ["{{base_url}}"],
+              "path": ["reservas", "huesped", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado → CONFIRMADA",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas/1/estado?nuevoEstado=CONFIRMADA",
+              "host": ["{{base_url}}"],
+              "path": ["reservas", "1", "estado"],
+              "query": [{ "key": "nuevoEstado", "value": "CONFIRMADA" }]
+            },
+            "description": "Estados válidos: PENDIENTE → CONFIRMADA → CHECKED_IN → CHECKED_OUT\nTransiciones inválidas devuelven 400."
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado → CHECKED_IN",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas/1/estado?nuevoEstado=CHECKED_IN",
+              "host": ["{{base_url}}"],
+              "path": ["reservas", "1", "estado"],
+              "query": [{ "key": "nuevoEstado", "value": "CHECKED_IN" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado → CHECKED_OUT",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas/1/estado?nuevoEstado=CHECKED_OUT",
+              "host": ["{{base_url}}"],
+              "path": ["reservas", "1", "estado"],
+              "query": [{ "key": "nuevoEstado", "value": "CHECKED_OUT" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado → CANCELADA",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas/1/estado?nuevoEstado=CANCELADA",
+              "host": ["{{base_url}}"],
+              "path": ["reservas", "1", "estado"],
+              "query": [{ "key": "nuevoEstado", "value": "CANCELADA" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Transición inválida (prueba)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/reservas/1/estado?nuevoEstado=PENDIENTE",
+              "host": ["{{base_url}}"],
+              "path": ["reservas", "1", "estado"],
+              "query": [{ "key": "nuevoEstado", "value": "PENDIENTE" }]
+            },
+            "description": "Intenta volver a PENDIENTE desde CHECKED_OUT. Debe devolver 400 Bad Request."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

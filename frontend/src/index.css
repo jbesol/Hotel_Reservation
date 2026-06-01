@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Keyframes ─────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes checkPop {
+  from { transform: scale(0) rotate(-10deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);  opacity: 1; }
+}
+
+/* ── Animation helpers ─────────────────────────────────── */
+.anim-slide-up { opacity: 0; animation: slideUp 0.25s ease-out forwards; }
+.anim-fade-in  { opacity: 0; animation: fadeIn  0.2s  ease-out forwards; }
+
+/* ── Base layer ────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: #F5F6F8;
+    color: #111827;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: rgba(232, 51, 59, 0.15);
+    color: #111827;
+  }
+
+  ::-webkit-scrollbar       { width: 5px; }
+  ::-webkit-scrollbar-track { background: #F5F6F8; }
+  ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.5;
+  }
+
+  input[type="range"] {
+    accent-color: #E8333B;
+  }
+}
+
+/* ── Component layer ───────────────────────────────────── */
+@layer components {
+  /* Skeleton shimmer */
+  .shimmer-bg {
+    background: linear-gradient(90deg, #F3F4F6 0%, #E9EAEC 50%, #F3F4F6 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  /* Standard text input */
+  .input-field {
+    @apply w-full bg-white border border-line rounded-xl px-4 py-3 text-ink
+           placeholder:text-ink-light focus:outline-none focus:border-primary/50
+           focus:ring-2 focus:ring-primary/10 transition-all duration-150 text-sm;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* Primary CTA button */
+  .btn-primary {
+    @apply bg-primary text-white font-semibold rounded-xl transition-all duration-150
+           hover:bg-primary-hover active:scale-[0.97]
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+
+  /* Soft outline button */
+  .btn-secondary {
+    @apply border border-line text-ink-secondary font-medium rounded-xl bg-white
+           transition-all duration-150 hover:border-gray-300 hover:bg-gray-50 active:scale-[0.97];
+  }
+
+  /* White card with shadow */
+  .card {
+    @apply bg-white rounded-2xl border border-line/60 shadow-card;
+  }
+
+  /* Score badge */
+  .score-badge {
+    @apply inline-flex items-center justify-center rounded-lg bg-score text-white
+           font-bold text-sm leading-none;
+  }
+}
+
+/* ── Utilities ─────────────────────────────────────────── */
+@layer utilities {
+  /* Room type gradient visuals */
+  .grad-simple       { background: linear-gradient(135deg, #1e3a5f 0%, #2563ab 50%, #1e4080 100%); }
+  .grad-doble        { background: linear-gradient(135deg, #7c2d12 0%, #c2410c 50%, #9a3412 100%); }
+  .grad-suite        { background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #5b21b6 100%); }
+  .grad-presidencial { background: linear-gradient(135deg, #292524 0%, #b45309 40%, #78350f 100%); }
+
+  /* Dot grid overlay for room visuals */
+  .dots-overlay {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Calendar range highlight */
+  .cal-in-range {
+    background-color: #FFF1F2;
+  }
+}
